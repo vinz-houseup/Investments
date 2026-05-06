@@ -1,118 +1,108 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 
 # --- BRAND COLORS (houseUP) ---
-HOUSEUP_BLUE = "#002D40"    # Deep Navy/Teal
-HOUSEUP_ORANGE = "#E58A1F"  # Branding Orange
-HOUSEUP_LIGHT = "#F4F4F4"   # Light Grey Background
-HOUSEUP_WHITE = "#FFFFFF"
+HOUSEUP_BLUE = "#002D40"
+HOUSEUP_ORANGE = "#E58A1F"
+HOUSEUP_LIGHT = "#F4F4F4"
 
-# Set page config
-st.set_page_config(page_title="houseUP | Investment Dashboard", layout="wide")
+st.set_page_config(page_title="houseUP | Investment Portfolio", layout="wide")
 
-# Custom CSS to inject houseUP styling
+# Custom Styling
 st.markdown(f"""
     <style>
     .main {{ background-color: {HOUSEUP_LIGHT}; }}
-    .stTabs [data-baseweb="tab-list"] {{ background-color: {HOUSEUP_BLUE}; border-radius: 5px; padding: 5px; }}
-    .stTabs [data-baseweb="tab"] {{ color: white; }}
-    .stMetric {{ background-color: {HOUSEUP_WHITE}; padding: 15px; border-radius: 10px; border-left: 5px solid {HOUSEUP_ORANGE}; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }}
-    h1, h2, h3 {{ color: {HOUSEUP_BLUE}; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }}
+    .stMetric {{ background-color: white; padding: 15px; border-radius: 10px; border-left: 5px solid {HOUSEUP_ORANGE}; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }}
     div[data-testid="stSidebar"] {{ background-color: {HOUSEUP_BLUE}; color: white; }}
     </style>
     """, unsafe_allow_html=True)
 
-# 1. THE DATA MODEL
 @st.cache_data
 def load_data():
     data = {
         'Property': ['The Skyline Project', 'Greenwich Mews Dev', 'Battersea Quarter'],
         'Borough': ['Canary Wharf (E14)', 'Greenwich (SE10)', 'Battersea (SW11)'],
-        'Site Purchase': [650000, 480000, 850000],
-        'Stamp Duty': [35000, 15000, 52000],
-        'Finding Fees': [13000, 9600, 17000],
-        'Investigations': [5000, 4500, 8000],
-        'Construction Costs': [180000, 120000, 250000],
-        'Professional Costs': [18000, 12000, 25000],
-        'Development Management Fees': [20000, 15000, 30000],
-        'Taxes & Contributions': [12000, 8000, 22000],
-        'Cost of Capital': [45000, 32000, 60000],
-        'Agent Fees': [15000, 12000, 20000],
-        'Expected GDV': [1200000, 900000, 1650000],
+        'Total Development Cost': [975000, 715000, 1320000],
+        'Yield (%)': [5.4, 5.1, 4.8],
+        'Annual Cap Growth (%)': [4.2, 5.5, 3.9],
+        # New Qualitative Parameters
+        'Location Grade': ['A', 'A+', 'A++'],
+        'Prestige Score (1-10)': [7, 8, 10],
+        'Liquidity': ['High', 'Medium', 'Very High'],
         'lat': [51.5054, 51.4826, 51.4791],
         'lon': [-0.0235, -0.0015, -0.1485]
     }
-    df = pd.DataFrame(data)
-    cost_cols = ['Site Purchase', 'Stamp Duty', 'Finding Fees', 'Investigations', 'Construction Costs', 
-                 'Professional Costs', 'Taxes & Contributions', 'Development Management Fees', 
-                 'Cost of Capital', 'Agent Fees']
-    df['Total Development Cost'] = df[cost_cols].sum(axis=1)
-    df['Projected Profit'] = df['Expected GDV'] - df['Total Development Cost']
-    df['Return on Cost (%)'] = (df['Projected Profit'] / df['Total Development Cost']) * 100
-    return df
+    return pd.DataFrame(data)
 
 df = load_data()
 
-# Header with houseUP Logo Placeholder
 st.title("🏙️ houseUP Investment Portfolio")
-st.markdown("#### Intelligent Construction & Development Analysis")
+st.markdown("### Development Feasibility & Market Potential")
 
-# 2. INDIVIDUAL DEEP DIVES
-st.header("1. Individual Project Feasibility")
+# 1. INDIVIDUAL TABS (Restructured)
 tabs = st.tabs([f"🏗️ {name}" for name in df['Property']])
 
 for i, tab in enumerate(tabs):
     with tab:
         p = df.iloc[i]
-        col1, col2, col3 = st.columns([1, 1.2, 1.2])
+        col1, col2, col3 = st.columns([1, 1, 1.2])
         
         with col1:
-            st.subheader("Project Summary")
-            st.metric("Total Investment", f"£{p['Total Development Cost']:,.0f}")
-            st.metric("Projected Profit", f"£{p['Projected Profit']:,.0f}", delta=f"{p['Return on Cost (%)']:.1f}% ROC")
-            st.write(f"**Borough:** {p['Borough']}")
+            st.subheader("Financial Metrics")
+            st.metric("Total Cost", f"£{p['Total Development Cost']:,.0f}")
+            st.metric("Target Yield", f"{p['Yield (%)']}%")
+            st.metric("Est. Cap Growth", f"{p['Annual Cap Growth (%)']}%")
         
         with col2:
-            st.subheader("Cost Breakdown")
-            breakdown_data = {
-                'Category': ['Site Purchase', 'Construction', 'Finance', 'Professional/Mgmt', 'Taxes', 'Fees'],
-                'Value': [p['Site Purchase'], p['Construction Costs'], p['Cost of Capital'],
-                          p['Professional Costs'] + p['Development Management Fees'],
-                          p['Stamp Duty'] + p['Taxes & Contributions'],
-                          p['Finding Fees'] + p['Investigations'] + p['Agent Fees']]
-            }
-            # Color pie with houseUP theme
-            fig_pie = px.pie(breakdown_data, values='Value', names='Category', hole=0.5,
-                             color_discrete_sequence=[HOUSEUP_BLUE, HOUSEUP_ORANGE, "#446A7A", "#88A0A8", "#B0B0B0"])
-            fig_pie.update_layout(margin=dict(t=0, b=0, l=0, r=0), height=250, showlegend=False)
-            st.plotly_chart(fig_pie, use_container_width=True)
-
+            st.subheader("Asset Quality")
+            st.write(f"**Location Grade:** {p['Location Grade']}")
+            st.write(f"**Prestige Score:** {p['Prestige Score (1-10)']}/10")
+            st.write(f"**Market Liquidity:** {p['Liquidity']}")
+            # Progress bar for prestige
+            st.progress(p['Prestige Score (1-10)'] * 10)
+        
         with col3:
-            st.subheader("Site Map")
+            st.subheader("Site Location")
             fig_map = px.scatter_mapbox(pd.DataFrame([p]), lat="lat", lon="lon", zoom=12, height=250)
             fig_map.update_layout(mapbox_style="carto-positron", margin={"r":0,"t":0,"l":0,"b":0})
             st.plotly_chart(fig_map, use_container_width=True)
 
 st.divider()
 
-# 3. SIDE-BY-SIDE SUMMARY
-st.header("2. Comparative Analytics")
-st.markdown("Comprehensive view of the **houseUP** investment pipeline.")
+# 2. COMPARISON SUMMARY
+st.header("2. Portfolio Growth & Yield Analysis")
 
-# Styled Comparison Table
-comp_df = df.set_index('Property').T
-rows_to_show = ['Site Purchase', 'Construction Costs', 'Cost of Capital', 'Total Development Cost', 
-                'Expected GDV', 'Projected Profit', 'Return on Cost (%)']
-st.table(comp_df.loc[rows_to_show].style.format(lambda x: f"£{x:,.0f}" if x > 100 else f"{x:.1f}%"))
+col_a, col_b = st.columns([1.5, 1])
 
-# Final Chart with houseUP Colors
-st.subheader("Investment Efficiency (Profit vs. Total Cost)")
-fig_profit = px.bar(
-    df, x='Property', y=['Total Development Cost', 'Projected Profit'],
-    barmode='stack',
-    color_discrete_map={'Total Development Cost': HOUSEUP_BLUE, 'Projected Profit': HOUSEUP_ORANGE}
-)
-fig_profit.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
-st.plotly_chart(fig_profit, use_container_width=True)
+with col_a:
+    st.subheader("Market Potential Matrix")
+    # This chart shows Yield vs Growth. Top right is the "Gold Mine"
+    fig_matrix = px.scatter(
+        df, x='Yield (%)', y='Annual Cap Growth (%)', 
+        size='Total Development Cost', color='Property',
+        text='Property', hover_name='Property',
+        color_discrete_sequence=[HOUSEUP_BLUE, HOUSEUP_ORANGE, "#446A7A"]
+    )
+    fig_matrix.update_traces(textposition='top center')
+    fig_matrix.update_layout(plot_bgcolor='white', xaxis=dict(gridcolor='#eee'), yaxis=dict(gridcolor='#eee'))
+    st.plotly_chart(fig_matrix, use_container_width=True)
+
+with col_b:
+    st.subheader("Prestige vs. Performance")
+    # Showing how Prestige correlates to Growth
+    fig_prestige = px.bar(
+        df, x='Property', y='Prestige Score (1-10)',
+        color_discrete_sequence=[HOUSEUP_ORANGE]
+    )
+    fig_prestige.update_layout(yaxis_range=[0,10])
+    st.plotly_chart(fig_prestige, use_container_width=True)
+
+# 3. FINAL SUMMARY TABLE
+st.subheader("Full Comparison Table")
+display_df = df[['Property', 'Borough', 'Location Grade', 'Prestige Score (1-10)', 'Yield (%)', 'Annual Cap Growth (%)', 'Total Development Cost']]
+st.table(display_df.style.format({
+    'Total Development Cost': '£{:,.0f}',
+    'Yield (%)': '{:.1f}%',
+    'Annual Cap Growth (%)': '{:.1f}%'
+}))
