@@ -1,19 +1,15 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 
 # Set page config
-st.set_page_config(page_title="London Property Investment Portfolio", layout="wide")
+st.set_page_config(page_title="London Property Portfolio", layout="wide")
 
-# Title and Intro
-st.title("🏙️ London Property Investment Analysis")
-st.markdown("### Portfolio Overview: Three High-Yield Opportunities")
+st.title("🏙️ London Property Investment Opportunities")
 
-# Load Data (Replace with your actual file path if needed)
+# 1. THE DATA
 @st.cache_data
 def load_data():
-    # This matches the structure of the Excel file I generated for you
     data = {
         'Property': ['The Skyline Apartment', 'The Heritage Mews', 'The Victoria Quarter'],
         'Borough': ['Canary Wharf (E14)', 'Greenwich (SE10)', 'Battersea (SW11)'],
@@ -21,6 +17,11 @@ def load_data():
         'Rent_PCM': [3800, 2750, 4800],
         'Yield': [5.36, 5.32, 5.24],
         'Growth': [4.5, 5.2, 3.8],
+        'Description': [
+            "High-rise luxury living in the heart of London's financial district. Strong corporate rental demand.",
+            "Charming period conversion near Greenwich Park. High capital growth potential due to local regeneration.",
+            "Premium new-build near the Power Station. Iconic location with ultra-prime appreciation prospects."
+        ],
         'lat': [51.5054, 51.4826, 51.4791],
         'lon': [-0.0235, -0.0015, -0.1485]
     }
@@ -28,60 +29,64 @@ def load_data():
 
 df = load_data()
 
-# --- SIDEBAR FILTERS ---
-st.sidebar.header("Investment Assumptions")
-growth_years = st.sidebar.slider("Projection Horizon (Years)", 1, 10, 5)
-management_fee = st.sidebar.slider("Management Fee (%)", 0, 15, 10)
+# 2. INDIVIDUAL OPPORTUNITY PRESENTATION
+st.header("1. Deep Dive: Property Analysis")
+st.info("Select a tab below to view the specifics of each investment.")
 
-# --- TOP ROW: KPI CARDS ---
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric("Avg. Rental Yield", f"{df['Yield'].mean():.2f}%")
-with col2:
-    st.metric("Total Portfolio Value", f"£{df['Price'].sum():,.0f}")
-with col3:
-    st.metric("Total Monthly Income", f"£{df['Rent_PCM'].sum():,.0f}")
+# Create one tab for each property
+tabs = st.tabs([f"📍 {name}" for name in df['Property']])
+
+for i, tab in enumerate(tabs):
+    with tab:
+        prop = df.iloc[i]
+        
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            st.subheader(prop['Property'])
+            st.write(f"**Location:** {prop['Borough']}")
+            st.write(f"**Investment Thesis:** {prop['Description']}")
+            
+            # Key Stats in a clean format
+            st.metric("Purchase Price", f"£{prop['Price']:,}")
+            st.metric("Monthly Rent", f"£{prop['Rent_PCM']:,}")
+            st.metric("Annual Yield", f"{prop['Yield']}%")
+
+        with col2:
+            # Local Map for this specific property
+            single_map_df = pd.DataFrame([prop])
+            fig_map = px.scatter_mapbox(single_map_df, lat="lat", lon="lon", zoom=13, height=300)
+            fig_map.update_layout(mapbox_style="carto-positron", margin={"r":0,"t":0,"l":0,"b":0})
+            st.plotly_chart(fig_map, use_container_width=True)
 
 st.divider()
 
-# --- MIDDLE ROW: MAP & COMPARISON ---
-left_col, right_col = st.columns([2, 1])
+# 3. SUMMARY COMPARISON TABLE
+st.header("2. Portfolio Comparison Summary")
+st.markdown("Use this table to compare the core financial metrics side-by-side.")
 
-with left_col:
-    st.subheader("Geographic Distribution")
-    fig_map = px.scatter_mapbox(df, lat="lat", lon="lon", hover_name="Property", 
-                                hover_data=["Borough", "Price"],
-                                color_discrete_sequence=["red"], zoom=10, height=400)
-    fig_map.update_layout(mapbox_style="carto-positron")
-    fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-    st.plotly_chart(fig_map, use_container_width=True)
+# Clean up the dataframe for display
+summary_df = df[['Property', 'Borough', 'Price', 'Rent_PCM', 'Yield', 'Growth']].copy()
 
-with right_col:
-    st.subheader("Yield vs Growth")
-    fig_chart = px.bar(df, x='Property', y='Yield', color='Growth',
-                       title="Yield (Bar) & Growth Potential (Color)")
-    st.plotly_chart(fig_chart, use_container_width=True)
+# Add Formatting for the table
+formatted_df = summary_df.copy()
+formatted_df['Price'] = formatted_df['Price'].map('£{:,.0f}'.format)
+formatted_df['Rent_PCM'] = formatted_df['Rent_PCM'].map('£{:,.0f}'.format)
+formatted_df['Yield'] = formatted_df['Yield'].map('{:.2f}%'.format)
+formatted_df['Growth'] = formatted_df['Growth'].map('{:.1f}%'.format)
 
-# --- BOTTOM ROW: PROJECTIONS ---
-# --- BOTTOM ROW: PROJECTIONS (FIXED) ---
-st.subheader(f"Projected Capital Appreciation ({growth_years} Years)")
+# Display as a clean, static table
+st.table(formatted_df)
 
-# Calculate future value based on user-selected growth years
-df['Projected_Value'] = df['Price'] * ((1 + (df['Growth']/100)) ** growth_years)
-
-# Create a grouped bar chart for comparison
-fig_proj = px.bar(
-    df, 
+# 4. VISUAL COMPARISON CHART
+st.subheader("Yield vs. Capital Growth Comparison")
+fig_comp = px.bar(
+    summary_df, 
     x='Property', 
-    y=['Price', 'Projected_Value'], 
-    barmode='group',
-    title="Current Price vs Future Valuation",
-    labels={'value': 'Value (£)', 'variable': 'Status'},
-    color_discrete_sequence=['#3366CC', '#109618'] # Blue for current, Green for future
+    y='Yield', 
+    color='Growth',
+    title="Relative Performance (Height = Yield | Color = Capital Growth)",
+    labels={'Yield': 'Rental Yield (%)', 'Growth': 'Annual Growth (%)'},
+    color_continuous_scale='RdYlGn' # Red to Green scale
 )
-
-st.plotly_chart(fig_proj, use_container_width=True)
-
-# Data Table
-st.subheader("Raw Investment Data")
-st.dataframe(df[['Property', 'Borough', 'Price', 'Rent_PCM', 'Yield', 'Growth']], use_container_width=True)
+st.plotly_chart(fig_comp, use_container_width=True)
