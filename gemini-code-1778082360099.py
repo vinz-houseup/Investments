@@ -63,10 +63,23 @@ with right_col:
     st.plotly_chart(fig_chart, use_container_width=True)
 
 # --- BOTTOM ROW: PROJECTIONS ---
+# --- BOTTOM ROW: PROJECTIONS (FIXED) ---
 st.subheader(f"Projected Capital Appreciation ({growth_years} Years)")
+
+# Calculate future value based on user-selected growth years
 df['Projected_Value'] = df['Price'] * ((1 + (df['Growth']/100)) ** growth_years)
-fig_proj = px.area(df, x='Property', y=['Price', 'Projected_Value'], 
-                   barmode='group', title="Current Price vs Future Valuation")
+
+# Create a grouped bar chart for comparison
+fig_proj = px.bar(
+    df, 
+    x='Property', 
+    y=['Price', 'Projected_Value'], 
+    barmode='group',
+    title="Current Price vs Future Valuation",
+    labels={'value': 'Value (£)', 'variable': 'Status'},
+    color_discrete_sequence=['#3366CC', '#109618'] # Blue for current, Green for future
+)
+
 st.plotly_chart(fig_proj, use_container_width=True)
 
 # Data Table
