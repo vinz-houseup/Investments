@@ -10,8 +10,9 @@ st.title("🏗️ London Property Development Dashboard")
 
 # 1. THE DATA MODEL
 @st.cache_data
+@st.cache_data
 def load_data():
-    # Adding your specific line items for three investments
+    # Data dictionary
     data = {
         'Property': ['The Skyline Project', 'Greenwich Mews Dev', 'Battersea Quarter'],
         'Borough': ['Canary Wharf (E14)', 'Greenwich (SE10)', 'Battersea (SW11)'],
@@ -24,31 +25,33 @@ def load_data():
         
         # Construction & Professional
         'Construction Costs': [180000, 120000, 250000],
-        'Professional Costs': [18000, 12000, 25000], # Architect, Surveyors
+        'Professional Costs': [18000, 12000, 25000],
         
         # Fees & Taxes
         'Development Management Fees': [20000, 15000, 30000],
-        'Taxes & Contributions': [12000, 8000, 22000], # CIL, S106
+        'Taxes & Contributions': [12000, 8000, 22000],
         
         # Finance & Exit
-        'Cost of Capital': [45000, 32000, 60000], # Interest/Finance
-        'Agent Fees': [15000, 12000, 20000], # Disposal fees
+        'Cost of Capital': [45000, 32000, 60000],
+        'Agent Fees': [15000, 12000, 20000],
         
-        # Performance
-        'Expected GDV': [1200000, 900000, 1650000], # Gross Development Value
+        # Performance - FIXED NAME HERE
+        'Expected GDV': [1200000, 900000, 1650000], 
         'lat': [51.5054, 51.4826, 51.4791],
         'lon': [-0.0235, -0.0015, -0.1485]
     }
     df = pd.DataFrame(data)
     
-    # Calculate Total Development Cost (TDC)
+    # List of all cost columns for summing
     cost_cols = [
         'Site Purchase', 'Stamp Duty', 'Finding Fees', 'Investigations', 
         'Construction Costs', 'Professional Costs', 'Taxes & Contributions', 
         'Development Management Fees', 'Cost of Capital', 'Agent Fees'
     ]
+    
+    # CALCULATIONS - FIXED NAMES HERE
     df['Total Development Cost'] = df[cost_cols].sum(axis=1)
-    df['Projected Profit'] = df['Expected_GDV'] - df['Total Development Cost']
+    df['Projected Profit'] = df['Expected GDV'] - df['Total Development Cost']
     df['Return on Cost (%)'] = (df['Projected Profit'] / df['Total Development Cost']) * 100
     
     return df
