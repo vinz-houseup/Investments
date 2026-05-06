@@ -1,22 +1,14 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import os
 
 # --- BRAND COLORS (houseUP) ---
 HOUSEUP_BLUE = "#002D40"
 HOUSEUP_ORANGE = "#E58A1F"
 HOUSEUP_LIGHT = "#F4F4F4"
 
-st.set_page_config(page_title="houseUP | Investor Portfolio", layout="wide")
-
-# 1. SIDEBAR WITH LOGO
-with st.sidebar:
-    # Adding your logo here
-    st.image("images/houseup-logo-new.png", use_container_width=True)
-    st.divider()
-    st.markdown("### Investment Controls")
-    st.info("Adjust parameters to see real-time impact on feasibility.")
-    # You can add sliders here later if you want to make it even more interactive!
+st.set_page_config(page_title="houseUP | London Property Investment", layout="wide")
 
 # Custom Styling
 st.markdown(f"""
@@ -26,33 +18,53 @@ st.markdown(f"""
     .stTabs [data-baseweb="tab-list"] {{ background-color: {HOUSEUP_BLUE}; border-radius: 5px; }}
     .stTabs [data-baseweb="tab"] {{ color: white; }}
     .stProgress > div > div > div > div {{ background-color: {HOUSEUP_ORANGE}; }}
-    h1, h2, h3 {{ color: {HOUSEUP_BLUE}; }}
+    h1, h2, h3 {{ color: {HOUSEUP_BLUE}; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }}
+    /* Center the logo container */
+    .logo-container {{ display: flex; justify-content: center; padding-bottom: 20px; }}
     </style>
     """, unsafe_allow_html=True)
 
+# --- TOP SECTION: LOGO AND TITLE ---
+logo_path = "images/houseup-logo-new.png"
+
+# Display logo centered
+if os.path.exists(logo_path):
+    col_l1, col_l2, col_l3 = st.columns([1,1,1])
+    with col_l2:
+        st.image(logo_path, use_container_width=True)
+else:
+    st.markdown("<h1 style='text-align: center;'>houseUP</h1>", unsafe_allow_html=True)
+
+# Main Title
+st.markdown("<h1 style='text-align: center;'>London property investment opportunities</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: gray;'>End-to-End Property Acquisition, Renovation, and Management</p>", unsafe_allow_html=True)
+st.markdown("---")
+
+# 1. THE DATA MODEL
 @st.cache_data
 def load_data():
     data = {
         'Property': ['The Skyline Project', 'Greenwich Mews Dev', 'Battersea Quarter'],
         'Borough': ['Canary Wharf (E14)', 'Greenwich (SE10)', 'Battersea (SW11)'],
+        'Image_URL': ['images/skyline.jpg', 'images/greenwich.jpg', 'images/battersea.jpg'],
         
-        # IMAGE LINKS - Ensure these files exist in your 'images/' folder on GitHub
-        'Image_URL': [
-            'images/skyline.jpg', 
-            'images/greenwich.jpg', 
-            'images/battersea.jpg'
-        ],
-
+        # Acquisition
         'Site Purchase': [650000, 480000, 850000],
         'Stamp Duty': [35000, 15000, 52000],
         'Finding Fees': [13000, 9600, 17000],
+        
+        # Refurbishment
         'Construction Costs': [150000, 110000, 220000],
         'Professional Costs': [15000, 11000, 22000],
         'Investigations': [5000, 4000, 7000],
+        
+        # Management
         'Development Management Fees': [15000, 10000, 25000],
         'Agent Fees (Rental/Mgmt)': [12000, 9000, 18000],
         'Taxes & Contributions': [10000, 7000, 15000],
         'Cost of Capital': [40000, 30000, 55000],
+        
+        # Performance
         'Yield (%)': [5.4, 5.1, 4.8],
         'Annual Cap Growth (%)': [4.2, 5.5, 3.9],
         'Prestige Score (1-10)': [7, 8, 10],
@@ -68,21 +80,18 @@ def load_data():
 
 df = load_data()
 
-st.title("🏗️ Investment & Development Portfolio")
-st.markdown("---")
-
-# 1. PROPERTY DEEP DIVES
+# 2. PROPERTY DEEP DIVES
 tabs = st.tabs([f"📍 {name}" for name in df['Property']])
 
 for i, tab in enumerate(tabs):
     with tab:
         p = df.iloc[i]
         
-        # Property Image
-        try:
+        # Hero Image
+        if os.path.exists(p['Image_URL']):
             st.image(p['Image_URL'], use_container_width=True)
-        except:
-            st.warning(f"Image for {p['Property']} not found. Please check 'images/' folder.")
+        else:
+            st.info(f"Showcasing high-end potential for {p['Property']}")
         
         c1, c2, c3 = st.columns([1, 1.2, 1.2])
         
@@ -116,7 +125,7 @@ for i, tab in enumerate(tabs):
 
 st.divider()
 
-# 2. COMPARISON & MATRIX
+# 3. COMPARISON & MATRIX
 col_a, col_b = st.columns([1.5, 1])
 with col_a:
     st.header("Yield vs. Growth Matrix")
@@ -128,12 +137,4 @@ with col_a:
 with col_b:
     st.header("Summary Table")
     st.table(df[['Property', 'Yield (%)', 'Annual Cap Growth (%)', 'Total Investment']].style.format({
-        'Total Investment': '£{:,.0f}', 'Yield (%)': '{:.1f}%', 'Annual Cap Growth (%)': '{:.1f}%'
-    }))
-
-# 3. FULL COST TABLE
-st.subheader("Detailed Financial Breakdown")
-cost_rows = ['Site Purchase', 'Stamp Duty', 'Finding Fees', 'Construction Costs', 
-             'Professional Costs', 'Investigations', 'Development Management Fees', 
-             'Agent Fees (Rental/Mgmt)', 'Cost of Capital', 'Total Investment']
-st.table(df.set_index('Property').T.loc[cost_rows].style.format(lambda x: f"£{x:,.0f}" if isinstance(x, (int, float)) else x))
+        'Total Investment': '£{:,.
