@@ -12,10 +12,7 @@ st.set_page_config(page_title="houseUP | Investment Portfolio", layout="wide")
 # Custom Styling
 st.markdown(f"""
     <style>
-    /* Add this inside your st.markdown CSS block */
-.stProgress > div > div > div > div {
-    background-color: #E58A1F;
-}
+   
     .main {{ background-color: {HOUSEUP_LIGHT}; }}
     .stMetric {{ background-color: white; padding: 15px; border-radius: 10px; border-left: 5px solid {HOUSEUP_ORANGE}; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }}
     div[data-testid="stSidebar"] {{ background-color: {HOUSEUP_BLUE}; color: white; }}
