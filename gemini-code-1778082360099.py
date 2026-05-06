@@ -9,6 +9,15 @@ HOUSEUP_LIGHT = "#F4F4F4"
 
 st.set_page_config(page_title="houseUP | Investor Portfolio", layout="wide")
 
+# 1. SIDEBAR WITH LOGO
+with st.sidebar:
+    # Adding your logo here
+    st.image("images/houseup-logo-new.png", use_container_width=True)
+    st.divider()
+    st.markdown("### Investment Controls")
+    st.info("Adjust parameters to see real-time impact on feasibility.")
+    # You can add sliders here later if you want to make it even more interactive!
+
 # Custom Styling
 st.markdown(f"""
     <style>
@@ -18,8 +27,6 @@ st.markdown(f"""
     .stTabs [data-baseweb="tab"] {{ color: white; }}
     .stProgress > div > div > div > div {{ background-color: {HOUSEUP_ORANGE}; }}
     h1, h2, h3 {{ color: {HOUSEUP_BLUE}; }}
-    /* Styling for the property image */
-    .prop-img {{ border-radius: 15px; box-shadow: 0px 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -29,11 +36,11 @@ def load_data():
         'Property': ['The Skyline Project', 'Greenwich Mews Dev', 'Battersea Quarter'],
         'Borough': ['Canary Wharf (E14)', 'Greenwich (SE10)', 'Battersea (SW11)'],
         
-        # IMAGE LINKS - Replace these with your actual image URLs or local paths
+        # IMAGE LINKS - Ensure these files exist in your 'images/' folder on GitHub
         'Image_URL': [
-            'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800', 
-            'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
-            'https://images.unsplash.com/photo-1600607687940-4e2a09695d51?w=800'
+            'images/skyline.jpg', 
+            'images/greenwich.jpg', 
+            'images/battersea.jpg'
         ],
 
         'Site Purchase': [650000, 480000, 850000],
@@ -61,7 +68,8 @@ def load_data():
 
 df = load_data()
 
-st.title("🏗️ houseUP | Investment & Development Portfolio")
+st.title("🏗️ Investment & Development Portfolio")
+st.markdown("---")
 
 # 1. PROPERTY DEEP DIVES
 tabs = st.tabs([f"📍 {name}" for name in df['Property']])
@@ -70,8 +78,11 @@ for i, tab in enumerate(tabs):
     with tab:
         p = df.iloc[i]
         
-        # Display Property Image at the Top
-        st.image(p['Image_URL'], use_container_width=True, caption=f"Architectural Rendering: {p['Property']}")
+        # Property Image
+        try:
+            st.image(p['Image_URL'], use_container_width=True)
+        except:
+            st.warning(f"Image for {p['Property']} not found. Please check 'images/' folder.")
         
         c1, c2, c3 = st.columns([1, 1.2, 1.2])
         
@@ -85,7 +96,7 @@ for i, tab in enumerate(tabs):
         with c2:
             st.subheader("Cost Lifecycle")
             lifecycle_data = {
-                'Phase': ['Acquisition', 'houseUP Refurbishment', 'Professional/Finance'],
+                'Phase': ['Acquisition', 'houseUP Refurb', 'Professional/Finance'],
                 'Cost': [
                     p['Site Purchase'] + p['Stamp Duty'] + p['Finding Fees'],
                     p['Construction Costs'] + p['Investigations'],
@@ -115,7 +126,7 @@ with col_a:
     st.plotly_chart(fig_matrix, use_container_width=True)
 
 with col_b:
-    st.header("Summary")
+    st.header("Summary Table")
     st.table(df[['Property', 'Yield (%)', 'Annual Cap Growth (%)', 'Total Investment']].style.format({
         'Total Investment': '£{:,.0f}', 'Yield (%)': '{:.1f}%', 'Annual Cap Growth (%)': '{:.1f}%'
     }))
