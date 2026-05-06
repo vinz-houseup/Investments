@@ -137,4 +137,12 @@ with col_a:
 with col_b:
     st.header("Summary Table")
     st.table(df[['Property', 'Yield (%)', 'Annual Cap Growth (%)', 'Total Investment']].style.format({
-        'Total Investment': '£{:,.
+        'Total Investment': '£{:,.0f}', 'Yield (%)': '{:.1f}%', 'Annual Cap Growth (%)': '{:.1f}%'
+    }))
+
+# 4. FULL COST TABLE
+st.subheader("Detailed Financial Breakdown")
+cost_rows = ['Site Purchase', 'Stamp Duty', 'Finding Fees', 'Construction Costs', 
+             'Professional Costs', 'Investigations', 'Development Management Fees', 
+             'Agent Fees (Rental/Mgmt)', 'Cost of Capital', 'Total Investment']
+st.table(df.set_index('Property').T.loc[cost_rows].style.format(lambda x: f"£{x:,.0f}" if isinstance(x, (int, float)) else x))
